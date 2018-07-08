@@ -1,0 +1,307 @@
+<html>
+<head>
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyB_cV8ldns6lsfWsUAb-bbCR1KrT2Zozgk" ></script>
+<style>
+html, body, #map_canvas { margin: 0; padding: 0; height: 100% }
+</style>
+</head>
+<body>
+<!-- CHECK ELEMENT ID also UPDATE CSS -->
+<div id="map_canvas"></div>
+</body>
+
+<script>
+var ANIMATION_WAIT = 20;
+var DELAY_BETWEEN = 2500;
+
+var map;
+var upper;
+var coordinates = [];
+var markers = [];
+var data = [
+ {
+   "Name": "      CENTRAL CHINMAYA MISSION TRUST - MAHARASHTRA",
+   "Address": "Saki Vihar Road, Powai, Mumbai, Maharashtra 400072, India",
+   "Lat": 19.1324891,
+   "Long": 72.8985255,
+   "Country": "India"
+ },
+ {
+   "Name": "CHINMAYA AWADH - LUCKNOW - UTTAR PRADESH",
+   "Address": "C-4, A, H. Park,Mahanagar Extension,Lucknow U.P.,Lucknow - 226006,Uttar Pradesh,India",
+   "Lat": 26.883565,
+   "Long": 80.954263,
+   "Country": "India"
+ },
+ {
+   "Name": "CHINMAYA BALANIVASA - ANDHRA PRADESH",
+   "Address": "S.V.N Colony,Guntur - 522 006,Andhra Pradesh,India",
+   "Lat": 16.325842,
+   "Long": 80.415104,
+   "Country": "India"
+ },
+ {
+   "Name": "CHINMAYA HARIDWAR - OREGON",
+   "Address": "3551 NW John Olsen Pl, Hillsboro, OR 97124",
+   "Lat": 45.546386,
+   "Long": -122.880986,
+   "Country": "USA"
+ },
+ {
+   "Name": "CHINMAYA INTERNATIONAL FOUNDATION (CIF) - KERALA",
+   "Address": "Adi Sankara Nilayam, Veliyanad, Ernakulam District, Kerala, India - 682319",
+   "Lat": 9.879144,
+   "Long": 76.455565,
+   "Country": "India"
+ },
+ {
+   "Name": "CHINMAYA MISSION VIJAYANAGARAM - ANDHRA PRADESH",
+   "Address": "Vizianagaram Cantonment, Vizianagaram, Andhra Pradesh 535003, India",
+   "Lat": 18.111636,
+   "Long": 83.395244,
+   "Country": "India"
+ },
+ {
+   "Name": "CHINMAYA MISSION ADONI - ANDHRA PRADESH",
+   "Address": "2/158 - A , Chinmaya Cultural Complex, Raghavendra Nagar, Adoni Arts College Road - 518302",
+   "Lat": 15.630349,
+   "Long": 77.290614,
+   "Country": "India"
+ },
+ {
+   "Name": "CHINMAYA MISSION AHMEDABAD - GUJARAT",
+   "Address": "Param Dham Satellite Road, Jodhpur Tekra, Ahmedabad - 380 015",
+   "Lat": 23.028391,
+   "Long": 72.520227,
+   "Country": "India"
+ },
+ {
+   "Name": "CHINMAYA MISSION AHMEDNAGAR - MAHARASHTRA",
+   "Address": "No.6 Old Prant Kacheri, Markendeya Housing Society, Aurangabad Road, Ahmednagar - 414 001",
+   "Lat": 19.835939,
+   "Long": 75.292161,
+   "Country": "India"
+ },
+ {
+   "Name": "CHINMAYA MISSION AKIVEDU - ANDHRA PRADESH",
+   "Address": "Tank Bund, Kodanda Ramalayam Street, West Godavari District, Akkiveedu- 534 235, Andhra Pradesh",
+   "Lat": 16.582544,
+   "Long": 81.373271,
+   "Country": "India"
+ },
+ {
+	"Name": "CHINMAYA MISSION NEW YORK",
+	"Address": "26 E 91st St, New York, NY 10128",
+	"Lat": 40.784172,
+	"Long": -73.956988,
+	"Country": "USA"
+ },
+ {
+	"Name": "CHINMAYA JYOTI - SAN DIEGO",
+	"Address": "12249 9th St, San Diego, CA 920648",
+	"Lat": 32.958662, 
+	"Long": -117.065740,
+	"Country": "USA"
+ },
+ {
+	"Name": "CHINMAYA MISSION ORLANDO",
+	"Address": "1221 Chinmaya Way, Casselberry, FL 32707",
+	"Lat": 28.668592, 
+	"Long": -81.292174,
+	"Country": "USA"
+ },
+ {
+	"Name": "CHINMAYA MISSION SINGAPORE",
+	"Address": "67 Tessensohn Rd, Singapore 217667",
+	"Lat": 1.315442, 
+	"Long": 103.856435,
+	"Country": "Singapore"
+ },
+ {
+	"Name": "Chinmaya Mission Melbourne",
+	"Address": "4 Pioneer Dr, Templestowe VIC 3106, Australia",
+	"Lat": -37.768284, 
+	"Long": 145.147453,
+	"Country": "Australia"
+ },
+ {
+	"Name": "CHINMAYA MISSION SYDNEY - NEW SOUTH WALES",
+	"Address": "38 Carrington Rd, Castle Hill NSW 2154, Australia",
+	"Lat": -33.728927, 
+	"Long": 150.985325,
+	"Country": "Australia"
+ }
+]
+
+// Sort adapted from: https://stackoverflow.com/questions/2855189/sort-latitude-and-longitude-coordinates-into-clockwise-ordered-quadrilateral
+// --------------------------------------------------------------------------
+function latToX(lat) { return (lat + 180) * 360; }
+function lngToY(lng) { return (lng + 90) * 180; }
+
+function distance(p1, p2) {
+        var dX = latToX(p1.lat()) - latToX(p2.lat());
+        var dY = lngToY(p1.lng()) - lngToY(p2.lng());
+        return Math.sqrt((dX*dX) + (dY*dY));
+}
+
+function slope(p1, p2) {
+        var dX = latToX(p1.lat()) - latToX(p2.lat());
+        var dY = lngToY(p1.lng()) - lngToY(p2.lng());
+        return dY / dX;
+}
+
+// A custom sort function that sorts p1 and p2 based on their slope
+// that is formed from the upper most point from the array of points.
+function pointSort(p1, p2) {
+    // Exclude the 'upper' point from the sort (which should come first).
+    if(p1 == upper) return -1;
+    if(p2 == upper) return 1;
+
+    // Find the slopes of 'p1' and 'p2' when a line is 
+    // drawn from those points through the 'upper' point.
+    var m1 = slope(upper, p1);
+    var m2 = slope(upper, p2);
+
+    // 'p1' and 'p2' are on the same line towards 'upper'.
+    if(m1 == m2) {
+        // The point closest to 'upper' will come first.
+        return distance(p1, upper) < distance(p2, upper) ? -1 : 1;
+    }
+
+    // If 'p1' is to the right of 'upper' and 'p2' is the the left.
+    if(m1 <= 0 && m2 > 0) return -1;
+
+    // If 'p1' is to the left of 'upper' and 'p2' is the the right.
+    if(m1 > 0 && m2 <= 0) return 1;
+
+    // It seems that both slopes are either positive, or negative.
+    return m1 > m2 ? -1 : 1;
+}
+
+// Find the upper most point. In case of a tie, get the left most point.
+function upperLeft(points) {
+    var top = points[0];
+    for(var i = 1; i < points.length; i++) {
+        var temp = points[i];
+        if(lngToY(temp.lng()) > lngToY(top.lng()) || (lngToY(temp.lng()) == lngToY(top.lng()) && latToX(temp.lat()) < latToX(top.lat()))) {
+            top = temp;
+        }
+    }
+    return top;
+}
+// --------------------------------------------------------------------------
+
+function countryCompare(a,b) {
+  if (a.Country < b.Country)
+    return -1;
+  if (a.Country > b.Country)
+    return 1;
+  return 0;
+}
+
+function initialize() {
+	// Process and sort points
+	var cur = [];
+	var lastCountry;
+	data.sort(countryCompare);
+	for(var i = 0, len = data.length; i < len; i++) {
+		if(lastCountry != data[i].Country && cur.length > 0) {
+			upper = upperLeft(cur);
+			cur.sort(pointSort);
+			coordinates.push.apply(coordinates, cur);
+			cur = [];
+		}
+		cur.push(new google.maps.LatLng(data[i].Lat, data[i].Long));
+		lastCountry = data[i].Country;
+	}
+	if (cur.length > 0) {
+		upper = upperLeft(cur);
+		cur.sort(pointSort);
+		coordinates.push.apply(coordinates, cur);
+	}
+	
+	var mapOptions = { center: coordinates[0], zoom: 5,
+    mapTypeId: google.maps.MapTypeId.ROADMAP };
+    map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+	for(var i = 0, len = coordinates.length; i < len; i++) {
+		addStationaryMarker(coordinates[i]);
+	}
+	addMarker(coordinates);
+}
+	
+function addStationaryMarker(pos) {
+    var marker = new google.maps.Marker({
+		map: map,
+		position: pos,
+		zIndex: markers.length,
+		icon: "Om_logo.gif"
+    });
+	markers.push(marker);
+}
+		
+function addMarker(coords) {
+    var marker = new google.maps.Marker({
+        map: map,
+        coordinates: coords,
+		icon:"chinmaya_mission_lamp.JPG",
+		curInd: 0,
+		position: coords[0],
+		zIndex: markers.length,
+    });
+      
+    function animatedMove(waitInBetween) {
+		from = marker.coordinates[marker.curInd % marker.coordinates.length];
+		to = marker.coordinates[(marker.curInd + 1)% marker.coordinates.length];
+		fromLat = from.lat();
+		fromLng = from.lng();
+		toLat = to.lat();
+		toLng = to.lng();
+		// store a LatLng for each step of the animation
+		frames = [];
+		for (var percent = 0; percent < 1; percent += 0.01) {
+			curLat = fromLat + percent * (toLat - fromLat);
+			curLng = fromLng + percent * (toLng - fromLng);
+			frames.push(new google.maps.LatLng(curLat, curLng));
+		}
+
+		move = function(marker, latlngs, index, wait, newDestination) {
+			map.setCenter(latlngs[index]);
+			marker.setPosition(latlngs[index]);
+			marker.title = data[marker.curInd].Address; 
+			if(index != latlngs.length-1) {
+			  // call the next "frame" of the animation
+			  setTimeout(function() { 
+				move(marker, latlngs, index+1, wait, newDestination); 
+			  }, wait);
+			}
+			else {
+			    // assign new route
+				map.setCenter(marker.position);
+				marker.setPosition(marker.coordinates[++marker.curInd % marker.coordinates.length]);
+				if (marker.curInd >= marker.coordinates.length)
+					marker.curInd = 0;
+				marker.title = data[marker.curInd].Address; 
+				// Output information in some way
+				console.log(data[marker.curInd].Address);
+
+				setTimeout(function() {
+					animatedMove(waitInBetween);
+				}, waitInBetween);
+			}
+		}
+		move(marker, frames, 0, ANIMATION_WAIT, marker.position);
+	}
+
+	// begin animation, send back to origin after completion
+	markers.push(marker);
+	animatedMove(DELAY_BETWEEN);
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+</script>
+
+</html>
