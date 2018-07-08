@@ -33,11 +33,13 @@
 		function lngToY(lng) { return (lng + 90) * 180; }
 
 		function distance(p1, p2) {
+				var dX = latToX(p1.lat()) - latToX(p2.lat());
 				var dY = lngToY(p1.lng()) - lngToY(p2.lng());
 				return Math.sqrt((dX*dX) + (dY*dY));
 		}
 
 		function slope(p1, p2) {
+				var dX = latToX(p1.lat()) - latToX(p2.lat());
 				var dY = lngToY(p1.lng()) - lngToY(p2.lng());
 				return dY / dX;
 		}
