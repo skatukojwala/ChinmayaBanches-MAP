@@ -1,0 +1,11 @@
+html, body, #map_canvas {
+	margin: 0;
+	padding: 0;
+	height: 97.5%;
+}
+
+#info {
+	font-size: 35;
+	font-family: Garamond;
+	text-align: center;
+}
