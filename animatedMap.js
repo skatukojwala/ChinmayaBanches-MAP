@@ -91,7 +91,7 @@ function initialize() {
 			processedData.push.apply(processedData, cur);
 			cur = [];
 		}
-		cur.push({loc: new google.maps.LatLng(data[i].Lat, data[i].Long), address: data[i].Address});
+		cur.push({loc: new google.maps.LatLng(data[i].Lat, data[i].Long), address: data[i].Name +"-"+data[i].Address});
 		lastCountry = data[i].Country;
 	}
 	if (cur.length > 0) {
