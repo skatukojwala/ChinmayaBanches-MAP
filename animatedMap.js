@@ -1,5 +1,6 @@
 var ANIMATION_WAIT = 20;
 var DELAY_BETWEEN = 2500;
+var ZOOM_LEVEL = 6; // Previously 5 
 
 var map;
 var upper;
@@ -79,10 +80,6 @@ function countryCompare(a,b) {
 }
 
 function initialize() {
-	initializeMap(); 
-}
-
-function initializeMap() {
 	// Process and sort points
 	var cur = [];
 	var lastCountry;
@@ -102,10 +99,13 @@ function initializeMap() {
 		cur.sort(pointSort);
 		processedData.push.apply(processedData, cur);
 	}
-	
+	initializeMap(); 
+}
+
+function initializeMap() {
 	var mapOptions = { 
 		center: processedData[0].loc,
-		zoom: 5,
+		zoom: ZOOM_LEVEL,
 		gestureHandling: 'none',
 		disableDefaultUI: true,
 		mapTypeId: google.maps.MapTypeId.ROADMAP
@@ -157,6 +157,7 @@ function addMarker(coords) {
 		move = function(marker, latlngs, index, wait, newDestination) {
 			map.setCenter(latlngs[index]);
 			marker.setPosition(latlngs[index]);
+			
 			if(index != latlngs.length-1) {
 			  // call the next "frame" of the animation
 				setTimeout(function() { 
